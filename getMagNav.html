@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    
+    <script>
+    //global variables
+    var navItem = [];
+    var itemContainer = [];
+    var magazineTitle = "";
+    var appender = "";
+
+
+    function GetMagID()
+    {       
+        //alert("here");
+        var _queryURL = window.location.search; 
+        var res = new  URLSearchParams(_queryURL); 
+        var _magID  = res.get("mag");
+        //alert(_magID);
+        return _magID;
+        //debugger;
+    }
+        
+
+    function GetNavigation(_MID){
+        var navItemURL = _spPageContextInfo.webAbsoluteUrl  + "/_api/web/lists/getbyTitle('MagNavConfig')/items?$filter=MagazineID eq " + _MID;
+        //alert(navItemURL);
+
+	    $.ajax({
+            url: navItemURL,
+            method: "GET",  
+            async: false,
+                headers: { "Accept": "application/json; odata=verbose" },
+                success: function (data) {
+                        if (data.d.results.length > 0) {
+                        //alert("success");
+                        navItem = data.d.results;
+                        itemContainer = navItem[0];
+                        //debugger;
+                        //alert("Total discussion items: " +  data.d.results.length);
+                        var allItemArray = Object.keys(navItem[0]);
+
+                        //get the Magazine Name
+                        magazineTitle = itemContainer["Title"];
+
+                        //get all the links
+                        PopulateNavigation(allItemArray);
+                    }
+                },
+                error: function (error) {
+                        alert("Error: " + JSON.stringify(error));
+                    }
+            });
+    }
+
+    function PopulateNavigation(myVal){
+        var filteredArray = [];
+        //alert("Object received");
+        for (var i = 0; i < myVal.length; i++){
+            if (myVal[i].includes("Link")){
+                if (itemContainer[myVal[i]] != null){
+                    filteredArray.push(myVal[i]);
+                }                
+            }
+        }
+
+        //debugger;
+        //get the link titles and URLs from the current list item
+        for (var i=0; i < filteredArray.length; i++){
+            //alert("Item number: " + i + " is - " + itemContainer[filteredArray[i]]);
+            var _navBenchTemp = itemContainer[filteredArray[i]];
+            var temp = _navBenchTemp.split("$&$");
+            var _navText = temp[0];
+            var _navURL = temp[1];
+            appender = appender + "<li><a href="+ _navURL +">"+ _navText +"</a></li>";            
+        }
+    }
+
+
+
+    $(document).ready(function() {
+        //alert("Ready");
+        //debugger;
+        var myMagID = GetMagID();
+        //alert(myMagID);
+        GetNavigation(myMagID);
+        $("#myMagazineName").html(magazineTitle);
+        $("#myAppender").append(appender);
+    });
+
+    
+    
+    </script>
+
+
+    <style>
+    .MagazineHeaderBackground{
+        background-color: orange;
+        font-size: 26px;
+        font-family: Arial, Helvetica, sans-serif;
+        height: 150px;
+        width: 1500px;
+        padding: 20px;
+    }
+
+    .orangeNavUL{
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #333;
+    }
+
+    .orangeNavUL li{
+        float: left;
+    }
+
+    .orangeNavUL li a {
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    .orangeNavUL li a:hover{
+        background-color: #4CAF50;
+    }
+
+    /*hide other SharePoint elements*/
+    #s4-titlerow, #sideNavBox{
+        display: none !important;
+    }
+   
+    /* adjust position of content */
+    #contentBox
+    {
+    margin-left:10px!important;
+    }
+
+
+#Read more: https://www.sharepointdiary.com/2014/05/hide-quick-launch-bar-in-sharepoint-2013.html#ixzz5xoWhvHfK
+
+    </style>
+</head>
+<body>
+
+<table>
+    <tr>
+        <td id="myMagazineName" class="MagazineHeaderBackground">
+        </td>
+    </tr>
+</table>
+
+<ul id="myAppender" class="orangeNavUL"></ul>
+    
+</body>
+</html>
